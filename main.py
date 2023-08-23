@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Response, Form
+from fastapi import FastAPI, Response, Form, Cookie
 from fastapi.responses import FileResponse
 from enum import Enum
 from pydantic import BaseModel
@@ -13,7 +13,7 @@ app = FastAPI()
 @app.get("/")
 async def main_page(response: Response):
     now = datetime.now()    # Получаем текущую дату и время
-    return FileResponse('Front/index.html'), response.set_cookie(key="last_visit", value=now) 
+    return FileResponse('Front/index.html')
 
 @app.get("/login")
 async def login_page():
@@ -21,13 +21,22 @@ async def login_page():
 
 @app.post("/api/login")
 async def login(login: Annotated[str, Form()], password: Annotated[str, Form()], response: Response):
-    session_id = hash(login + password)
-    sessions.append(session_id)
-    return response.set_cookie(key='session_token', value=f'SID{session_id}', httponly=True)
+    session_id = 'SID' + str(hash(login + password))
+    sessions[session_id] = {'username': f'{login}', 'password': f'{password}'}
+    response.set_cookie(key='session_token', value=f'{session_id}', httponly=True)
+    return sessions
+
 
 @app.post("/api/user")
-async def user():
-    pass
+async def user(response: Response, session_token: str | None = Cookie(default=None)):
+    if session_token:
+        if session_token and session_token in sessions:
+            return sessions[session_token]
+        else:
+            response.status_code = 401
+            return {"message": "Unauthorized"}
+
+    
 
 @app.post("/api/calculate")
 async def calculate_sum(data: CalculateData):
