@@ -15,9 +15,11 @@ async def main_page(response: Response):
     now = datetime.now()    # Получаем текущую дату и время
     return FileResponse('Front/index.html')
 
+
 @app.get("/login")
 async def login_page():
     return FileResponse('Front/login.html')
+
 
 @app.post("/api/login")
 async def login(login: Annotated[str, Form()], password: Annotated[str, Form()], response: Response):
@@ -36,26 +38,13 @@ async def user(response: Response, session_token: str | None = Cookie(default=No
             response.status_code = 401
             return {"message": "Unauthorized"}
 
-    
-
-@app.post("/api/calculate")
-async def calculate_sum(data: CalculateData):
-    return {'result': data.num1 + data.num2}
-
-
-@app.post("/api/feedback")
-async def feedback(data: FeedBack):
-    return {"message": f"Feedback recieved. Thank you, {data.name}"}
-
-@app.post("/api/create_user")
-async def create_user(user: UserCreate):
-    return user
 
 @app.get("/api/product/{product_id}")
 async def product_info(product_id: int):
     for product in sample_products:
         if product.get('product_id') == product_id:
             return product
+
 
 @app.get("/api/products/search")
 async def product_search(keyword: str, category: str = None, limit: int = 10):
@@ -70,9 +59,11 @@ async def product_search(keyword: str, category: str = None, limit: int = 10):
                     new_array.append(dictionary)
     return new_array
 
+
 @app.get("/assets/{file_path:path}")
 async def css_static(file_path: str):
     return FileResponse(f"Front/assets/{file_path}")
+
 
 @app.get("/images/{file_path:path}")
 async def images_static(file_path: str):
