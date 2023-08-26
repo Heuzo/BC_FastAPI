@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Response, Form, Cookie
+from fastapi import FastAPI, Response, Form, Cookie, Header, HTTPException, Request
 from fastapi.responses import FileResponse
 from enum import Enum
 from pydantic import BaseModel
@@ -6,6 +6,7 @@ from models import CalculateData, User, FeedBack, UserCreate, LoginUser
 from fake_db import fake_users, sample_products, sessions
 from datetime import datetime
 from typing import Annotated
+from util import check_headers_correct
 
 app = FastAPI()
 
@@ -38,6 +39,17 @@ async def user(response: Response, session_token: str | None = Cookie(default=No
             response.status_code = 401
             return {"message": "Unauthorized"}
 
+
+@app.get("/api/headers")
+async def headers(request: Request):
+
+    if check_headers_correct(request.headers):
+        return {
+            'User-Agent': request.headers['User-Agent'],
+            'Accept-Language': request.headers['Accept-Language'] 
+            }
+
+            
 
 @app.get("/api/product/{product_id}")
 async def product_info(product_id: int):
