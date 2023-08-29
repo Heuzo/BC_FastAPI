@@ -1,13 +1,36 @@
-from fastapi import FastAPI, Response, Form
+from fastapi import FastAPI, Response, Form, Depends, status, HTTPException
 from fastapi.responses import FileResponse
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from enum import Enum
 from pydantic import BaseModel
 from models import CalculateData, User, FeedBack, UserCreate, LoginUser
-from fake_db import fake_users, sample_products
 from datetime import datetime
-from data.data import data_json
+from fake_db import USER_DATA
 
 app = FastAPI()
+security = HTTPBasic()
+
+
+
+
+# Симуляционный пример получения инфы о пользователе
+def get_user_from_db(username: str):
+    for user in USER_DATA:
+        if user.username == username:
+            return user
+    return None
+
+
+# Аутентификация
+def authenticate_user(credentials: HTTPBasicCredentials = Depends(security)):
+    user = get_user_from_db(credentials.username)
+    if user is None or user.password != credentials.password:
+        raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, 
+                detail="Invalid credentials", 
+                headers={"WWW-Authenticate": "Basic"}, # Заголовок в ответе нужен чтобы браузер повторно отобразил окно ввода данных
+                )
+    return user
 
 
 @app.get("/")
@@ -16,28 +39,29 @@ async def main_page(response: Response):
     response.set_cookie(key="last_visit", value=now)    # Устанавливаем куку 
     return FileResponse('Front/index.html')
 
+
+@app.get("/protected/")
+def get_protected_resource(user: User = Depends(authenticate_user)):
+    return {}
+
+
 @app.get("/login")
-async def login_page():
-    return FileResponse('Front/login.html')
+async def login_page(user: User = Depends(authenticate_user)):
+    return {"message": "You got my secret, welcome"}
+
 
 @app.post("/login")
-async def login_page(user: LoginUser):
+async def login_page(user: User = Depends(authenticate_user)):
     return f'Данные пришли {user}'
 
-@app.post("/api/calculate")
-async def calculate_sum(data: CalculateData):
-    return {'result': data.num1 + data.num2}
-
-@app.get("/api/user/{user_id}")
-async def user_info(user_id: int):
-    if user_id in fake_users:
-        return fake_users[user_id]
-    return {"error": "User not found"}
 
 @app.get("/api/data")
 async def recieve_data():
     return FileResponse("data/hello.html")
 
+
+
+# Роуты овтечащие за раздачу файлов статики по запросу фронта
 
 @app.get("/assets/{file_path:path}")
 async def css_static(file_path: str):
