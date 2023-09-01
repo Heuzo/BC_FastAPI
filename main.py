@@ -1,16 +1,13 @@
 from fastapi import FastAPI, Response, Form, Depends, status, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from enum import Enum
-from pydantic import BaseModel
-from models import CalculateData, User, FeedBack, UserCreate, LoginUser
+from models import User
 from datetime import datetime
 from fake_db import USER_DATA
 
+
 app = FastAPI()
 security = HTTPBasic()
-
-
 
 
 # Симуляционный пример получения инфы о пользователе
@@ -40,21 +37,12 @@ async def main_page(response: Response):
     return FileResponse('Front/index.html')
 
 
-@app.get("/protected/")
-def get_protected_resource(user: User = Depends(authenticate_user)):
-    return {}
-
-
 @app.get("/login")
 async def login_page(user: User = Depends(authenticate_user)):
     return {"message": "You got my secret, welcome"}
 
 
-@app.post("/login")
-async def login_page(user: User = Depends(authenticate_user)):
-    return f'Данные пришли {user}'
-
-
+# Роут для доступа к примонтированной к докер контейнеру папке
 @app.get("/api/data")
 async def recieve_data():
     return FileResponse("data/hello.html")
