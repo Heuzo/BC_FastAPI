@@ -1,9 +1,7 @@
 from models import User
 
-fake_users = {
-    1: {"username": "john doe", "email": "john@example.com"},
-    2: {"username": "jane doe", "email": "jane@example.com"},
-    3: {"username": "vlad doe", "email": "vlad@example.com"},
+fake_users =  {
+
 }
 
 
@@ -41,10 +39,3 @@ sample_product_5 = {
     "category": "Electronics",
     "price": 299.99
 }
-
-sample_products = [sample_product_1, sample_product_2, sample_product_3, sample_product_4, sample_product_5]
-
-USER_DATA = [
-    User(**{"username": "user1", "password": "pass1"}),
-    User(**{"username": "user2", "password": "pass2"})
-    ]

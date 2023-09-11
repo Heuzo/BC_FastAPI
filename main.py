@@ -3,31 +3,12 @@ from fastapi.responses import FileResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from models import User
 from datetime import datetime
-from fake_db import USER_DATA
-
+from utils import check_auth, generate_token
+from fake_db import fake_users
+from hashlib import md5
 
 app = FastAPI()
 security = HTTPBasic()
-
-
-# Симуляционный пример получения инфы о пользователе
-def get_user_from_db(username: str):
-    for user in USER_DATA:
-        if user.username == username:
-            return user
-    return None
-
-
-# Аутентификация
-def authenticate_user(credentials: HTTPBasicCredentials = Depends(security)):
-    user = get_user_from_db(credentials.username)
-    if user is None or user.password != credentials.password:
-        raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, 
-                detail="Invalid credentials", 
-                headers={"WWW-Authenticate": "Basic"}, # Заголовок в ответе нужен чтобы браузер повторно отобразил окно ввода данных
-                )
-    return user
 
 
 @app.get("/")
@@ -36,11 +17,26 @@ async def main_page(response: Response):
     response.set_cookie(key="last_visit", value=now)    # Устанавливаем куку 
     return FileResponse('Front/index.html')
 
+@app.post("/register")
+async def login_page(user: User):
+    hash_id = md5(user.user_name.encode())
+    hash_pass = md5(user.password.encode())
+    fake_users[hash_id.hexdigest()] = {
+        'user_name': f'{user.user_name}', 
+        'password': f'{hash_pass.hexdigest()}'
+        }
+    return fake_users
 
-@app.get("/login")
-async def login_page(user: User = Depends(authenticate_user)):
-    return {"message": "You got my secret, welcome"}
-
+@app.post("/login")
+async def login_page(user: User):
+    if check_auth(user):
+        generate_token()
+        return {"message": "Success"}
+    else:
+        raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED, 
+        detail="Invalid credentials", 
+        )
 
 # Роут для доступа к примонтированной к докер контейнеру папке
 @app.get("/api/data")
