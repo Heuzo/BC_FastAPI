@@ -1,0 +1,64 @@
+[tool.black]
+line-length = 88
+skip-string-normalization = true
+skip-magic-trailing-comma = true
+include = '\.pyi?$'
+exclude = '''
+/(
+  | \.git
+  | \.mypy_cache
+  | \.venv
+  | migrations
+)/
+'''
+
+[tool.ruff]
+# Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
+select = ["B", "E", "F"]
+ignore = []
+
+fixable = ["ALL"]
+unfixable = []
+exclude = [
+  ".bzr",
+  ".direnv",
+  ".eggs",
+  ".git",
+  ".git-rewrite",
+  ".hg",
+  ".mypy_cache",
+  ".nox",
+  ".pants.d",
+  ".pytype",
+  ".ruff_cache",
+  ".svn",
+  ".tox",
+  ".venv",
+  "__pypackages__",
+  "_build",
+  "buck-out",
+  "build",
+  "dist",
+  "node_modules",
+  "venv",
+  'migrations',
+  '.mypy_cache',
+]
+
+line-length = 88
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+target-version = "py311"
+
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+line_length = 88
+combine_as_imports = true
+combine_star = true
+skip_glob = '''
+  .git,
+  .mypy_cache,
+  .venv,
+  migrations
+'''
