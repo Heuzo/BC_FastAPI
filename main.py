@@ -34,7 +34,7 @@ async def authentification(user: User, response: Response):
     # Проверяем есть ли пользователь в базе
     if user.user_name in fake_users:
         # Формируем заявки/claims/записи и заносим их в JWT body
-        claims = {'userId': f'{user.user_name}', 'role': 'usergit '}
+        claims = {'userId': f'{user.user_name}'}
         access_token = create_jwt_token(claims)
         response.status_code = status.HTTP_201_CREATED
         return {'access_token': access_token, 'token_type': 'bearer'}
@@ -49,7 +49,7 @@ async def authentification(user: User, response: Response):
 async def protected(response: Response, token: Annotated[str, Depends(oauth2_scheme)]):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[JWT_ALGORITHM])
-        username: str = payload.get('sub')
+        username: str = payload.get('userId')
         if username is None:
             raise HTTPException(status_code=401, detail='Invalid token')
     except jwt.ExpiredSignatureError:
@@ -64,6 +64,7 @@ async def protected(response: Response, token: Annotated[str, Depends(oauth2_sch
             detail='Invalid token',
             headers={'WWW-Authenticate': 'Bearer'},
         ) from None
+    return {'message': 'Access granted to protected resource'}
 
 
 # Роут для доступа к примонтированной к докер контейнеру папке
