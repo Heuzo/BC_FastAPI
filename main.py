@@ -1,14 +1,15 @@
 from datetime import datetime
-from hashlib import md5
 from typing import Annotated
 
+import jwt
 from fastapi import Depends, FastAPI, HTTPException, Response, status
 from fastapi.responses import FileResponse
 from fastapi.security import HTTPBasic, OAuth2PasswordBearer
 
 from fake_db import fake_users
 from models import User
-from utils import create_jwt_token, read_jwt_token
+from settings import JWT_ALGORITHM, SECRET_KEY
+from utils import create_jwt_token
 
 app = FastAPI()
 security = HTTPBasic()
@@ -28,53 +29,41 @@ async def main_page(response: Response):
     return FileResponse('Front/index.html')
 
 
-@app.post('/api/register')
-async def register(user: User, response: Response):
-    hash_id = md5(user.user_name.encode()).hexdigest()
-    hash_pass = md5(user.password.encode()).hexdigest()
-
-    if hash_id not in fake_users:
-        fake_users[hash_id] = {
-            'user_name': f'{user.user_name}',
-            'password': f'{hash_pass}',
-        }
-        claim = {'userId': f'{user.user_name}', 'role': 'usergit '}
+@app.post('/api/login')
+async def authentification(user: User, response: Response):
+    # Проверяем есть ли пользователь в базе
+    if user.user_name in fake_users:
+        # Формируем заявки/claims/записи и заносим их в JWT body
+        claims = {'userId': f'{user.user_name}', 'role': 'usergit '}
+        access_token = create_jwt_token(claims)
         response.status_code = status.HTTP_201_CREATED
-        response.set_cookie(key='access_token', value=create_jwt_token(claim))
-        return fake_users[hash_id]
+        return {'access_token': access_token, 'token_type': 'bearer'}
     else:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='User with that login already exists',
+            status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid credentials'
         )
 
 
 @DeprecationWarning
 @app.get('/protected_resource')
 async def protected(response: Response, token: Annotated[str, Depends(oauth2_scheme)]):
-    if read_jwt_token('userId') in fake_users:
-        response.status_code = status.HTTP_200_OK
-        return {'message': 'Access allowed'}
-    else:
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        username: str = payload.get('sub')
+        if username is None:
+            raise HTTPException(status_code=401, detail='Invalid token')
+    except jwt.ExpiredSignatureError:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid credentials'
-        )
-
-
-@app.post('/api/login')
-async def clelogin_page(
-    user: User, response: Response, token: Annotated[str, Depends(oauth2_scheme)]
-):
-    # Рефреш токена при успешной аутентифицаии JWT
-    if read_jwt_token(token, 'userId') == user.user_name:
-        claim = read_jwt_token(token)
-        response.set_cookie(key='access_token', value=create_jwt_token(claim))
-        response.status_code = status.HTTP_200_OK
-        return token
-    else:
+            status_code=401,
+            detail='Token has expired',
+            headers={'WWW-Authenticate': 'Bearer'},
+        ) from None
+    except jwt.DecodeError:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid credentials'
-        )
+            status_code=401,
+            detail='Invalid token',
+            headers={'WWW-Authenticate': 'Bearer'},
+        ) from None
 
 
 # Роут для доступа к примонтированной к докер контейнеру папке

@@ -1,4 +1,4 @@
-fake_users = {}
+fake_users = {'heuzo': '2101'}
 
 
 sample_product_1 = {
