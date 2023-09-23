@@ -1,15 +1,11 @@
 from datetime import datetime
 from typing import Annotated
 
-import jwt
-from fastapi import Depends, FastAPI, HTTPException, Response, status
+from fastapi import Depends, FastAPI, Response
 from fastapi.responses import FileResponse
-from fastapi.security import HTTPBasic, OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import HTTPBasic, OAuth2PasswordRequestForm
 
-from fake_db import fake_users
-from models import User
-from settings import JWT_ALGORITHM, SECRET_KEY
-from utils import create_jwt_token, oauth2_scheme, read_jwt_token, auth_and_token, is_admin
+from utils import oauth2_scheme, read_jwt_token, auth_and_token, is_admin
 
 
 app = FastAPI()
@@ -25,9 +21,9 @@ async def read_items(token: Annotated[str, Depends(oauth2_scheme)]):
 @app.get('/')
 async def main_page(response: Response):
     # Получаем текущую дату и время
-    now = datetime.now()  
+    now = datetime.now()
     # Устанавливаем куку
-    response.set_cookie(key='last_visit', value=str(now)) 
+    response.set_cookie(key='last_visit', value=str(now))
     return FileResponse('Front/index.html')
 
 
@@ -37,7 +33,7 @@ async def authentification(user: Annotated[OAuth2PasswordRequestForm, Depends()]
 
 
 @app.get('/api/admin')
-async def admin(token = Depends(read_jwt_token)): 
+async def admin(token = Depends(read_jwt_token)):
     if is_admin(token):
         return {'Message': 'Success'}
 
