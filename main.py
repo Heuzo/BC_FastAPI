@@ -1,17 +1,21 @@
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, TYPE_CHECKING, List
+import sqlalchemy.orm as _orm
 
 from fastapi import Depends, FastAPI, Response
 from fastapi.responses import FileResponse
 from fastapi.security import HTTPBasic, OAuth2PasswordRequestForm
 
 from utils import oauth2_scheme, read_jwt_token, auth_and_token, is_admin
+import DB.schemas as schemas
+import DB.services as services
 
 
 app = FastAPI()
 security = HTTPBasic()
 
-
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
 
 @app.get('/items/')
 async def read_items(token: Annotated[str, Depends(oauth2_scheme)]):
@@ -50,6 +54,12 @@ async def recieve_data(token = Depends(read_jwt_token)):
     return FileResponse('data/hello.html')
 
 
+@app.post("/api/todo", response_model=schemas.Todo)
+async def create_todo(
+    todo: schemas.CreateTodo,
+    db: _orm.Session  = Depends(services.get_db)
+    ):
+    return await services.create_todo(todo=todo, db=db)
 
 # Роуты овтечащие за раздачу файлов статики по запросу фронта
 

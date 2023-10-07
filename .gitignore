@@ -22,3 +22,5 @@ cython_debug/
 
 # Ruff
 .ruff_cache
+
+# MyApp temp ignore
