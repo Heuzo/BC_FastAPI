@@ -1,6 +1,6 @@
-from pydantic import BaseModel
 from typing import Optional
 
+from pydantic import BaseModel
 
 
 class User(BaseModel):
@@ -15,8 +15,10 @@ class Todo(BaseModel):
     description: str
     finished: bool
 
+    class Config:
+        from_attributes = True
 
 class CreateTodo(BaseModel):
-    title:int
+    title: str
     description: Optional[str] = None
-    
+    finished: Optional[bool] = False
