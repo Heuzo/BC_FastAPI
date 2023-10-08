@@ -1,0 +1,5 @@
+CREATE USER myuser WITH ENCRYPTED PASSWORD 'password';
+GRANT ALL PRIVILEGES ON DATABASE fastapi_database TO myuser;
+GRANT ALL ON DATABASE fastapi_database TO myuser;
+ALTER DATABASE fastapi_database OWNER TO myuser;
+GRANT USAGE, CREATE ON SCHEMA PUBLIC TO myuser
