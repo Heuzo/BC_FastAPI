@@ -22,3 +22,6 @@ class CreateTodo(BaseModel):
     title: str
     description: Optional[str] = None
     finished: Optional[bool] = False
+
+class Command(BaseModel):
+    method: str

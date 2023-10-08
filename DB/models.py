@@ -9,3 +9,4 @@ class Todo(_database.Base):
     title = _sql.Column(_sql.String, nullable=False, index=True)
     description = _sql.Column(_sql.String, nullable=True)
     finished = _sql.Column(_sql.Boolean, nullable=False)
+    
