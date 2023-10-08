@@ -7,6 +7,11 @@ from fastapi import HTTPException
 def _add_tables():
     return database.Base.metadata.create_all(bind=database.engine)
 
+# Удалить все сущетсвующие таблицы
+def _drop_tables():
+    return database.Base.metadata.drop_all(bind=database.engine)
+
+
 # Получение экземпляра сессии к БД
 def get_db():
     db = database.SessionLocal()
@@ -14,10 +19,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
-
-def delete_tables(db: orm.Session):
-    db.query(models.Todo).delete()
 
 # Создание записи
 async def create_todo(todo: schemas.CreateTodo, db: orm.Session) -> schemas.Todo:

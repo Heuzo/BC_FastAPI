@@ -18,6 +18,14 @@ security = HTTPBasic()
 if TYPE_CHECKING:
     pass
 
+@app.on_event('startup')
+def prepare_base():
+    services._add_tables()
+
+@app.on_event('shutdown')
+def clean_up_base():
+    services._drop_tables()
+
 @app.get('/')
 async def main_page(response: Response):
     # Получаем текущую дату и время
