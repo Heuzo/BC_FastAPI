@@ -1,30 +1,21 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, Annotated, List
+from typing import Annotated
 
-import sqlalchemy.orm as _orm
-from fastapi import Depends, FastAPI, Response, HTTPException, status
+from fastapi import Depends, FastAPI, Response
 from fastapi.responses import FileResponse
 from fastapi.security import HTTPBasic, OAuth2PasswordRequestForm
 
-import DB.models as models
-import DB.schemas as schemas
-import DB.services as services
-from utils import auth_and_token, is_admin, oauth2_scheme, read_jwt_token
+from utils import oauth2_scheme, read_jwt_token, auth_and_token, is_admin
 
-app = FastAPI(title='Heuzon API', description='Документация к сервису, реализованному в рамках обучения')
+
+app = FastAPI()
 security = HTTPBasic()
 
 
-if TYPE_CHECKING:
-    pass
 
-@app.on_event('startup')
-async def prepare_table():
-    services._add_tables()
-
-@app.on_event('shutdown')
-async def prepare_table():
-    services._drop_tables()
+@app.get('/items/')
+async def read_items(token: Annotated[str, Depends(oauth2_scheme)]):
+    return {'token': token}
 
 
 @app.get('/')
@@ -35,63 +26,38 @@ async def main_page(response: Response):
     response.set_cookie(key='last_visit', value=str(now))
     return FileResponse('Front/index.html')
 
-@app.post('/api/login',  tags=['Auth'])
-async def login(
-    user: Annotated[OAuth2PasswordRequestForm, Depends()], response: Response
-):
+
+@app.post('/api/login')
+async def authentification(user: Annotated[OAuth2PasswordRequestForm, Depends()], response: Response):
     return auth_and_token(user, response)
 
 
-@app.get('/api/admin', tags=['Auth'])
-async def admin(token=Depends(read_jwt_token)):
+@app.get('/api/admin')
+async def admin(token = Depends(read_jwt_token)):
     if is_admin(token):
         return {'Message': 'Success'}
 
 
+
 @app.get('/api/protected')
-async def protected(token=Depends(read_jwt_token)):
+async def protected(token = Depends(read_jwt_token)):
     return {'message': 'Success'}
 
 
-# ----------------- CRUD ------------------- 
+# Роут для доступа к примонтированной к докер контейнеру папке
+@app.get('/api/data')
+async def recieve_data(token = Depends(read_jwt_token)):
+    return FileResponse('data/hello.html')
 
-@app.post('/api/todo', response_model=schemas.Todo, tags=['ToDo CRUD'])
-async def create_todo(
-    todo: schemas.CreateTodo, db: _orm.Session = Depends(services.get_db)
-    ):
-    return await services.create_todo(todo=todo, db=db)
-
-@app.get('/api/todo', response_model=List[schemas.Todo], tags=['ToDo CRUD'])
-async def get_all_todo(db: _orm.Session = Depends(services.get_db)):
-    return await services.get_all_todos(db=db)
-
-@app.get('/api/todo/{todo_id}', response_model=schemas.Todo, tags=['ToDo CRUD'])
-async def get_todo(todo_id: int, db: _orm.Session = Depends(services.get_db)):
-    return await services.get_one_todo(db=db, todo_id=todo_id)
-
-#TODO Вынести логику удаления пользователя
-@app.delete('/api/todo/{todo_id}', tags=['ToDo CRUD'])
-async def delete_todo(todo_id: int, db: _orm.Session = Depends(services.get_db)):
-    todo = await services.get_one_todo(db=db, todo_id=todo_id)
-    if todo is None:
-        raise HTTPException(status_code=404, detail="User does not exist")
-    
-    await services.delete_one_todo(todo, db=db)
-    return {'message': 'Success'}
-
-@app.delete('/api/todo', tags=['ToDo CRUD'])
-async def delete_todo(db: _orm.Session = Depends(services.get_db)):
-    await services.delete_all_todo(db=db)
-    return {'message': 'Success'}
-
-# ----------------- END OF CRUD ------------------- 
 
 
 # Роуты овтечащие за раздачу файлов статики по запросу фронта
-@app.get('/assets/{file_path:path}', tags=['Static'])
+
+@app.get('/assets/{file_path:path}')
 async def css_static(file_path: str):
     return FileResponse(f'Front/assets/{file_path}')
 
-@app.get('/images/{file_path:path}', tags=['Static'])
+
+@app.get('/images/{file_path:path}')
 async def images_static(file_path: str):
     return FileResponse(f'Front/images/{file_path}')
