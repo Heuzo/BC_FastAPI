@@ -14,7 +14,6 @@ from utils import auth_and_token, is_admin, oauth2_scheme, read_jwt_token
 app = FastAPI(title='Heuzon API', description='Документация к сервису, реализованному в рамках обучения')
 security = HTTPBasic()
 
-
 if TYPE_CHECKING:
     pass
 
@@ -68,20 +67,29 @@ async def get_all_todo(db: _orm.Session = Depends(services.get_db)):
 async def get_todo(todo_id: int, db: _orm.Session = Depends(services.get_db)):
     return await services.get_one_todo(db=db, todo_id=todo_id)
 
-#TODO Вынести логику удаления пользователя из базы в сервисы
+#TODO: Вынести логику обновления пользователя в сервисы
+@app.put('/api/todo/{todo_id}', response_model=schemas.Todo)
+async def update_todo(todo_id: int, data: schemas.CreateTodo, db : _orm.Session = Depends(services.get_db)):
+    todo = await services.get_one_todo(db=db, todo_id=todo_id)
+    if todo is None:
+        raise HTTPException(status_code=404, detail="ToDo does not exist")
+    
+    return await services.update_todo(db=db, todo=todo, todo_data=data)
+
+#TODO Вынести логику удаления пользователя в сервисы
 @app.delete('/api/todo/{todo_id}', tags=['ToDo CRUD'])
 async def delete_todo(todo_id: int, db: _orm.Session = Depends(services.get_db)):
     todo = await services.get_one_todo(db=db, todo_id=todo_id)
     if todo is None:
-        raise HTTPException(status_code=404, detail="User does not exist")
+        raise HTTPException(status_code=404, detail="ToDo does not exist")
     
     await services.delete_one_todo(todo, db=db)
-    return {'message': 'Success'}
+
 
 @app.delete('/api/todo', tags=['ToDo CRUD'])
 async def delete_todo(db: _orm.Session = Depends(services.get_db)):
-    await services.delete_all_todo(db=db)
-    return {'message': 'Success'}
+    return await services.delete_all_todo(db=db)
+
 
 # ----------------- END OF CRUD ------------------- 
 

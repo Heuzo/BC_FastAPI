@@ -45,15 +45,25 @@ async def get_one_todo(db: orm.Session, todo_id: int) -> schemas.Todo:
 async def delete_one_todo(todo, db: orm.Session):
     db.delete(todo)
     db.commit()
-
+    
 # Удаление всех записей таблицы ToDo
 async def delete_all_todo(db: orm.Session):
     todos = await get_all_todos(db=db, reusable=True)
-    
     if todos is None:
-        raise HTTPException(status_code=404, detail="all ToDo`s already deleted")
+        raise HTTPException(status_code=404, detail="All ToDo`s already deleted")
         
     for item in todos:
         await delete_one_todo(item, db=db)
 
-    return {'message': 'Success'}
+    return {"message":"All ToDo raws deleted"}
+
+
+async def update_todo(db: orm.Session, todo_data: schemas.CreateTodo, todo: models.Todo):
+    todo.title = todo_data.title
+    todo.description = todo_data.description
+    todo.finished = todo_data.finished
+
+    db.commit()
+    db.refresh(todo)
+
+    return schemas.Todo.from_orm(todo)
