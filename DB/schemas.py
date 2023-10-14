@@ -13,7 +13,7 @@ class Todo(BaseModel):
     id: int
     title: str
     description: str
-    finished: bool
+    completed: bool
 
     class Config:
         from_attributes = True
@@ -21,7 +21,7 @@ class Todo(BaseModel):
 class CreateTodo(BaseModel):
     title: str
     description: Optional[str] = None
-    finished: Optional[bool] = False
+    completed: Optional[bool] = False
 
 class Command(BaseModel):
     method: str

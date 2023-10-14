@@ -9,6 +9,7 @@ from fastapi.security import HTTPBasic, OAuth2PasswordRequestForm
 import DB.schemas as schemas
 import DB.services as services
 from utils import auth_and_token, is_admin, read_jwt_token
+from DB.tools import PostgresTools
 
 app = FastAPI(
     title='Heuzon API',
@@ -22,12 +23,12 @@ if TYPE_CHECKING:
 
 @app.on_event('startup')
 def prepare_base():
-    services._add_tables()
+    PostgresTools._add_tables()
 
 
 @app.on_event('shutdown')
 def clean_up_base():
-    services._drop_tables()
+    PostgresTools._drop_tables()
 
 
 @app.get('/')
@@ -64,44 +65,39 @@ async def protected(token=Depends(read_jwt_token)):
 async def create_todo(
     todo: schemas.CreateTodo, db: _orm.Session = Depends(services.get_db)
 ):
-    return await services.create_todo(todo=todo, db=db)
+    todo = PostgresTools.add_todo(todo.title, todo.description)
+    return todo 
 
 
 @app.get('/api/todo', response_model=List[schemas.Todo], tags=['ToDo CRUD'])
-async def get_all_todo(db: _orm.Session = Depends(services.get_db)):
-    return await services.get_all_todos(db=db)
+async def get_all_todo():
+    todos = PostgresTools.get_todo_all()
+    return todos
 
 
 @app.get('/api/todo/{todo_id}', response_model=schemas.Todo, tags=['ToDo CRUD'])
-async def get_todo(todo_id: int, db: _orm.Session = Depends(services.get_db)):
-    return await services.get_one_todo(db=db, todo_id=todo_id)
+async def get_one_todo(todo_id: int):
+    todo = PostgresTools.get_todo_by_id(id=todo_id)
+    return todo
 
 
 # TODO: Вынести логику обновления пользователя в сервисы
 @app.put('/api/todo/{todo_id}', response_model=schemas.Todo)
-async def update_todo(
-    todo_id: int, data: schemas.CreateTodo, db: _orm.Session = Depends(services.get_db)
-):
-    todo = await services.get_one_todo(db=db, todo_id=todo_id)
-    if todo is None:
-        raise HTTPException(status_code=404, detail='ToDo does not exist')
-
-    return await services.update_todo(db=db, todo=todo, todo_data=data)
-
+async def update_todo(todo_id: int, data: schemas.CreateTodo):
+    todo = PostgresTools.update_todo_by_id(
+        todo_id, title=data.title, description=data.description, completed=data.completed)
+    return todo 
 
 # TODO Вынести логику удаления пользователя в сервисы
 @app.delete('/api/todo/{todo_id}', tags=['ToDo CRUD'])
-async def delete_todo(todo_id: int, db: _orm.Session = Depends(services.get_db)):
-    todo = await services.get_one_todo(db=db, todo_id=todo_id)
-    if todo is None:
-        raise HTTPException(status_code=404, detail='ToDo does not exist')
-
-    await services.delete_one_todo(todo, db=db)
-
+async def delete_todo(todo_id: int):
+    PostgresTools.delete_todo_by_id(todo_id)
+    return {'message':'Success'}
 
 @app.delete('/api/todo', tags=['ToDo CRUD'])
-async def delete_all_todo(db: _orm.Session = Depends(services.get_db)):
-    return await services.delete_all_todo(db=db)
+async def delete_all_todo():
+    PostgresTools.delete_all_todo()
+    return {'message':'Success'}
 
 
 # ----------------- END OF CRUD -------------------
