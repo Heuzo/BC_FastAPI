@@ -1,6 +1,4 @@
-import os 
-
-from sqlalchemy import Column, Integer, String, Boolean, create_engine
+from sqlalchemy import Boolean, Column, Integer, String, create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 DATABASE_URL = 'postgresql://myuser:password@localhost:5432/fastapi_database'
@@ -13,7 +11,7 @@ class Base(DeclarativeBase):
 
 
 class Todo(Base):
-    __tablename__ = "todo"
+    __tablename__ = 'todo'
     id = Column(Integer, primary_key=True)
     title = Column(String)
     description = Column(String)
@@ -23,7 +21,6 @@ class Todo(Base):
 class PostgresTools:
     session = sessionmaker(autoflush=False, bind=engine)
 
-
     @classmethod
     def add_todo(cls, title, description):
         todo = Todo(title=title, description=description)
@@ -32,21 +29,18 @@ class PostgresTools:
             db.commit()
             todo = db.query(Todo).get(todo.id)
         return todo
-    
 
     @classmethod
     def get_todo_by_id(cls, id):
         with cls.session(autoflush=False, bind=engine) as db:
             todo = db.query(Todo).get(id)
         return todo
-    
 
     @classmethod
     def get_todo_all(cls):
         with cls.session(autoflush=False, bind=engine) as db:
             all_todos = db.query(Todo).all()
         return all_todos
-
 
     @classmethod
     def delete_todo_by_id(cls, id):
@@ -56,8 +50,7 @@ class PostgresTools:
                 db.delete(todo)
                 db.commit()
                 return True
-    
-    
+
     @classmethod
     def delete_all_todo(cls):
         with cls.session(autoflush=False, bind=engine) as db:
@@ -80,14 +73,13 @@ class PostgresTools:
         return todo
 
 
-    @staticmethod
+    @classmethod
     # Создать таблицы из всех моделей
     def _add_tables():
         return Base.metadata.create_all(bind=engine)
 
 
-    @staticmethod
+    @classmethod
     # Удалить все сущетсвующие таблицы
     def _drop_tables():
         return Base.metadata.drop_all(bind=engine)
-

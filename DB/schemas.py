@@ -18,10 +18,12 @@ class Todo(BaseModel):
     class Config:
         from_attributes = True
 
+
 class CreateTodo(BaseModel):
     title: str
     description: Optional[str] = None
     completed: Optional[bool] = False
+
 
 class Command(BaseModel):
     method: str

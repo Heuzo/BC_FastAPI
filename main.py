@@ -2,14 +2,14 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Annotated, List
 
 import sqlalchemy.orm as _orm
-from fastapi import Depends, FastAPI, HTTPException, Response
+from fastapi import Depends, FastAPI, Response
 from fastapi.responses import FileResponse
 from fastapi.security import HTTPBasic, OAuth2PasswordRequestForm
 
 import DB.schemas as schemas
 import DB.services as services
-from utils import auth_and_token, is_admin, read_jwt_token
 from DB.tools import PostgresTools
+from utils import auth_and_token, is_admin, read_jwt_token
 
 app = FastAPI(
     title='Heuzon API',
@@ -66,7 +66,7 @@ async def create_todo(
     todo: schemas.CreateTodo, db: _orm.Session = Depends(services.get_db)
 ):
     todo = PostgresTools.add_todo(todo.title, todo.description)
-    return todo 
+    return todo
 
 
 @app.get('/api/todo', response_model=List[schemas.Todo], tags=['ToDo CRUD'])
@@ -85,19 +85,25 @@ async def get_one_todo(todo_id: int):
 @app.put('/api/todo/{todo_id}', response_model=schemas.Todo)
 async def update_todo(todo_id: int, data: schemas.CreateTodo):
     todo = PostgresTools.update_todo_by_id(
-        todo_id, title=data.title, description=data.description, completed=data.completed)
-    return todo 
+        todo_id,
+        title=data.title,
+        description=data.description,
+        completed=data.completed,
+    )
+    return todo
+
 
 # TODO Вынести логику удаления пользователя в сервисы
 @app.delete('/api/todo/{todo_id}', tags=['ToDo CRUD'])
 async def delete_todo(todo_id: int):
     PostgresTools.delete_todo_by_id(todo_id)
-    return {'message':'Success'}
+    return {'message': 'Success'}
+
 
 @app.delete('/api/todo', tags=['ToDo CRUD'])
 async def delete_all_todo():
     PostgresTools.delete_all_todo()
-    return {'message':'Success'}
+    return {'message': 'Success'}
 
 
 # ----------------- END OF CRUD -------------------
