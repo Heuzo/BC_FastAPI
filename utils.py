@@ -6,18 +6,9 @@ from fastapi import Depends, HTTPException, Response, status
 from fastapi.security import OAuth2PasswordBearer
 
 from DB.schemas import User
-from fake_db import fake_users
 from settings import ACCESS_TOKEN_EXPIRE_MINUTES, JWT_ALGORITHM, SECRET_KEY
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='/api/login')
-
-
-# Функция для получения пользовательских данных на основе имени пользователя
-def get_user(username: str) -> User | None:
-    if username in fake_users:
-        user_data = fake_users[username]
-        return User(**user_data)
-    return None
 
 
 # Аутентификация на основании сверки хешей Логина / Пароля

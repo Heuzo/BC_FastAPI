@@ -75,11 +75,11 @@ class PostgresTools:
 
     @classmethod
     # Создать таблицы из всех моделей
-    def _add_tables():
+    def _add_tables(cls):
         return Base.metadata.create_all(bind=engine)
 
 
     @classmethod
     # Удалить все сущетсвующие таблицы
-    def _drop_tables():
+    def _drop_tables(cls):
         return Base.metadata.drop_all(bind=engine)

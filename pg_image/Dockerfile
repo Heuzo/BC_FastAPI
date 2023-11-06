@@ -1,4 +1,4 @@
-FROM postgres:alpine
+FROM arm64v8/postgres
 
 ENV POSTGRES_DB fastapi_database
 ENV POSTGRES_USER admin

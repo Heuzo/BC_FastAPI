@@ -7,7 +7,6 @@ from fastapi.responses import FileResponse
 from fastapi.security import HTTPBasic, OAuth2PasswordRequestForm
 
 import DB.schemas as schemas
-import DB.services as services
 from DB.tools import PostgresTools
 from utils import auth_and_token, is_admin, read_jwt_token
 
@@ -62,9 +61,7 @@ async def protected(token=Depends(read_jwt_token)):
 
 
 @app.post('/api/todo', response_model=schemas.Todo, tags=['ToDo CRUD'])
-async def create_todo(
-    todo: schemas.CreateTodo, db: _orm.Session = Depends(services.get_db)
-):
+async def create_todo(todo: schemas.CreateTodo):
     todo = PostgresTools.add_todo(todo.title, todo.description)
     return todo
 
