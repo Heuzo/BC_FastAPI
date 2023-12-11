@@ -1,14 +1,12 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Annotated, List
 
-import sqlalchemy.orm as _orm
 from fastapi import Depends, FastAPI, Response
 from fastapi.responses import FileResponse
 from fastapi.security import HTTPBasic, OAuth2PasswordRequestForm
 
-import DB.schemas as schemas
 from DB.tools import PostgresTools
-from utils import auth_and_token, is_admin, read_jwt_token
+from models.models import TodoModel
 
 app = FastAPI(
     title='Heuzon API',
@@ -39,48 +37,48 @@ async def main_page(response: Response):
     return FileResponse('Front/index.html')
 
 
-@app.post('/api/login', tags=['Auth'])
-async def login(
-    user: Annotated[OAuth2PasswordRequestForm, Depends()], response: Response
-):
-    return auth_and_token(user, response)
+# @app.post('/api/login', tags=['Auth'])
+# async def login(
+#     user: Annotated[OAuth2PasswordRequestForm, Depends()], response: Response
+# ):
+#     return auth_and_token(user, response)
 
 
-@app.get('/api/admin', tags=['Auth'])
-async def admin(token=Depends(read_jwt_token)):
-    if is_admin(token):
-        return {'Message': 'Success'}
+# @app.get('/api/admin', tags=['Auth'])
+# async def admin(token=Depends(read_jwt_token)):
+#     if is_admin(token):
+#         return {'Message': 'Success'}
 
 
-@app.get('/api/protected')
-async def protected(token=Depends(read_jwt_token)):
-    return {'message': 'Success'}
+# @app.get('/api/protected')
+# async def protected(token=Depends(read_jwt_token)):
+#     return {'message': 'Success'}
 
 
 # ----------------- CRUD -------------------
 
 
-@app.post('/api/todo', response_model=schemas.Todo, tags=['ToDo CRUD'])
-async def create_todo(todo: schemas.CreateTodo):
-    todo = PostgresTools.add_todo(todo.title, todo.description)
+@app.post('/api/todo', tags=['ToDo CRUD'])
+async def create_todo(data: TodoModel):
+    todo = PostgresTools.add_todo(data.title, data.description)
     return todo
 
 
-@app.get('/api/todo', response_model=List[schemas.Todo], tags=['ToDo CRUD'])
+@app.get('/api/todo', tags=['ToDo CRUD'])
 async def get_all_todo():
     todos = PostgresTools.get_todo_all()
     return todos
 
 
-@app.get('/api/todo/{todo_id}', response_model=schemas.Todo, tags=['ToDo CRUD'])
+@app.get('/api/todo/{todo_id}', tags=['ToDo CRUD'])
 async def get_one_todo(todo_id: int):
     todo = PostgresTools.get_todo_by_id(id=todo_id)
     return todo
 
 
 # TODO: Вынести логику обновления пользователя в сервисы
-@app.put('/api/todo/{todo_id}', response_model=schemas.Todo)
-async def update_todo(todo_id: int, data: schemas.CreateTodo):
+@app.put('/api/todo/{todo_id}')
+async def update_todo(todo_id: int, data: TodoModel):
     todo = PostgresTools.update_todo_by_id(
         todo_id,
         title=data.title,

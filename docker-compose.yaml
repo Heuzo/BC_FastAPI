@@ -3,16 +3,17 @@ version: "3"
 services:
 
   database:
-    image: heuzon/pg_test_base
+    image: heuzon/bc_fastapi-database:v0.1
     ports:
       - 5432:5432
-    container_name: database
+    container_name: psql_database
+    
 
   app_api:
-    build: .
+    image: heuzon/bc_fastapi-app_api:v0.1
     depends_on:
     - database
     ports:
       - 8080:8080
-
-    
+    container_name: fastapi_app
+    command: sh -c './wait-for psql_database:5432 -- cmd' # ожидаем
