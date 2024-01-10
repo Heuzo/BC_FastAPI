@@ -1,7 +1,8 @@
 from sqlalchemy import Boolean, Column, Integer, String, create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from settings import DATABASE_HOST
 
-DATABASE_URL = 'postgresql://myuser:password@psql_database:5432/fastapi_database'
+DATABASE_URL = f'postgresql://myuser:password@{DATABASE_HOST}:5432/fastapi_database'
 
 engine = create_engine(DATABASE_URL)
 

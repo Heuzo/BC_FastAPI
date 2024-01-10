@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, Annotated, List
 
-from fastapi import Depends, FastAPI, Response
+from fastapi import Depends, FastAPI, Response, status
 from fastapi.responses import FileResponse
 from fastapi.security import HTTPBasic, OAuth2PasswordRequestForm
 
@@ -58,7 +58,7 @@ async def main_page(response: Response):
 # ----------------- CRUD -------------------
 
 
-@app.post('/api/todo', tags=['ToDo CRUD'])
+@app.post('/api/todo', tags=['ToDo CRUD'], status_code=status.HTTP_201_CREATED)
 async def create_todo(data: TodoModel):
     todo = PostgresTools.add_todo(data.title, data.description)
     return todo
